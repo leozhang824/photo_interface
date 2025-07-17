@@ -128,7 +128,7 @@ def create_model(sequence_length, num_features):
         TimeDistributed(Dense(1))
     ])
     
-    model.compile(optimizer=Adam(learning_rate=0.003), loss='mae')
+    model.compile(optimizer=Adam(learning_rate=0.005), loss='mae')
     early_stopping = EarlyStopping(
         monitor='val_loss',
         patience=10,
