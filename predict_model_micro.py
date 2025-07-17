@@ -8,9 +8,9 @@ from train_micro import make_pred_plot
 
 def output(csv_file):
   min_epoch = 20
-  max_epoch = 90
+  max_epoch = 80
   min_lr = 0.001
-  max_lr = 0.006
+  max_lr = 0.004
 
   for num_epochs in range(min_epoch, max_epoch, 10):
     for learning_rate in np.arange(min_lr, max_lr, 0.001):
@@ -76,7 +76,7 @@ col1, col2 = st.columns(2)
 with col1: 
   num_epochs = st.slider(label="Select the number of epochs (how many times the model will run)", min_value=20, max_value=70, value=50, step=10)
 with col2: 
-  learning_rate = st.slider(label="Select the learning rate (how fast the model will improve)", min_value=0.001, max_value=0.005, value=0.003, step=0.001, format="%.3f")
+  learning_rate = st.slider(label="Select the learning rate (how fast the model will improve)", min_value=0.001, max_value=0.003, value=0.003, step=0.001, format="%.3f")
 
 
 if (num_epochs + learning_rate) not in st.session_state:
