@@ -110,5 +110,4 @@ if csv_file is not None:
   if st.button("Generate more interactive plot"):
     print("making plot")
     fig = plot(data, start_datetime)
-    fig.show()
-
+    st.plotly_chart(fig, use_container_width=True)
