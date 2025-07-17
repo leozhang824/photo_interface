@@ -51,39 +51,71 @@ def prepare_sequences(data, sequence_length, feature_columns):
     sequences = []
     targets = []
     timestamps = []
+
+    xs_sequences = []
+    xs_targets = []
+    xs_timestamps = []
     voltage_column = 'voltage'
 
     # Ensure 'day' column is datetime
     data['day'] = pd.to_datetime(data['day'])
     data = data.sort_values(['day', 'Time (seconds)'])
 
-    # Group by day
-    grouped = data.groupby('day')
-    unique_days = list(grouped.groups.keys())
+    start_time = data['Time (seconds)'].iloc[0]
+    end_time = data['Time (seconds)'].iloc[-1]
+    current_time = start_time
 
-    print("Unique days in dataset:", unique_days)
+    while current_time + pd.Timedelta(seconds=86400) <= end_time:
+        window_start = current_time
+        window_end = current_time + pd.Timedelta(seconds=86400)
 
-    for i in range(len(unique_days) - 1):  # Stop one day before the last
-        current_day = unique_days[i]
-        next_day = unique_days[i+1]
-        
-        current_day_data = grouped.get_group(current_day)[feature_columns].values
-        next_day_voltage = grouped.get_group(next_day)[voltage_column].values
-        next_day_timestamp = grouped.get_group(next_day)['Time (seconds)'].values
-        # Truncate or pad sequences to ensure consistent length
-        current_day_data = current_day_data[:sequence_length]
-        next_day_voltage = next_day_voltage[:sequence_length]
-        next_day_timestamp = next_day_timestamp[:sequence_length]
+        # Input (current 24 hours)
+        current_chunk = data[(data['Time (seconds)'] >= window_start) & (data['Time (seconds)'] < window_end)]
 
+        # Target (next 24 hours)
+        next_chunk = data[(data['Time (seconds)'] >= window_end) & (data['Time (seconds)'] < window_end + pd.Timedelta(seconds=86400))]
 
-        
-        # Safety rail but this should always work
+        current_day_data = current_chunk[feature_columns].values[:sequence_length]
+        next_day_voltage = next_chunk[voltage_column].values[:sequence_length]
+        next_day_timestamp = next_chunk['Time (seconds)'].values[:sequence_length]
+
         if len(current_day_data) == sequence_length and len(next_day_voltage) == sequence_length:
             sequences.append(current_day_data)
             targets.append(next_day_voltage)
             timestamps.append(next_day_timestamp)
         else:
-            print(f"Data lengths are messed up. Curr Day: {len(current_day_data)}, Next Day: {len(next_day_voltage)}")
+            print(f"Incomplete sequence at window starting {window_start}")
+
+        # Move window forward by 1 day (or change to sliding window)
+        current_time += pd.Timedelta(seconds=86400)
+
+    # # Group by day
+    # grouped = data.groupby('day')
+    # unique_days = list(grouped.groups.keys())
+
+    # print("Unique days in dataset:", unique_days)
+
+    # for i in range(len(unique_days) - 1):  # Stop one day before the last
+    #     current_day = unique_days[i]
+    #     next_day = unique_days[i+1]
+        
+    #     current_day_data = grouped.get_group(current_day)[feature_columns].values
+    #     next_day_voltage = grouped.get_group(next_day)[voltage_column].values
+    #     next_day_timestamp = grouped.get_group(next_day)['Time (seconds)'].values
+    #     # Truncate or pad sequences to ensure consistent length
+    #     current_day_data = current_day_data[:sequence_length]
+    #     next_day_voltage = next_day_voltage[:sequence_length]
+    #     next_day_timestamp = next_day_timestamp[:sequence_length]
+
+
+        
+    #     # Safety rail but this should always work
+    #     if len(current_day_data) == sequence_length and len(next_day_voltage) == sequence_length:
+    #         sequences.append(current_day_data)
+    #         targets.append(next_day_voltage)
+    #         timestamps.append(next_day_timestamp)
+    #     else:
+    #         print(f"Data lengths are messed up. Curr Day: {len(current_day_data)}, Next Day: {len(next_day_voltage)}")
             
     # for i in range(len(unique_days) - 1):  # Stop one before the last day
     #     current_day = unique_days[i]
@@ -120,7 +152,7 @@ def prepare_sequences(data, sequence_length, feature_columns):
     return np.array(sequences), np.array(targets), np.array(timestamps)
 
 
-def create_model(sequence_length, num_features):
+def create_model(sequence_length, num_features, learning_rate):
     model = Sequential([
         LSTM(100, activation='tanh', input_shape=(sequence_length, num_features), 
              return_sequences=True, kernel_regularizer=l2(0.01)),
@@ -128,7 +160,7 @@ def create_model(sequence_length, num_features):
         TimeDistributed(Dense(1))
     ])
     
-    model.compile(optimizer=Adam(learning_rate=0.005), loss='mae')
+    model.compile(optimizer=Adam(learning_rate=learning_rate), loss='mae')
     early_stopping = EarlyStopping(
         monitor='val_loss',
         patience=10,
@@ -152,7 +184,7 @@ def train_model(model, early_stopping, X_train, y_train, num_epochs, initial_epo
     
     return model
 
-def make_pred_plot(start_datetime, filter_datetime, csv, min_epoch, max_epoch):
+def make_pred_plot(start_datetime, filter_datetime, csv, min_epoch, max_epoch, min_lr, max_lr):
     sequence_length = 4*60
 
     # Load and preprocess the data
@@ -176,48 +208,46 @@ def make_pred_plot(start_datetime, filter_datetime, csv, min_epoch, max_epoch):
     print(type(X_train), X_train.shape)
     print(type(y_train), y_train.shape)
 
-
     print(f"X: {len(X)}")
-
-    # Create and train the model
-    model, early_stopping = create_model(sequence_length, num_features)
-
     figures = {}
 
+    for learning_rate in np.arange(min_lr, max_lr, 0.001):
+    # Create and train the model
+        model, early_stopping = create_model(sequence_length, num_features, learning_rate)
 
-    initial_epoch = 0
-    for num_epochs in range(min_epoch, max_epoch, 10):
-        model = train_model(model, early_stopping, X_train, y_train, num_epochs, initial_epoch)
-        initial_epoch = num_epochs
+        initial_epoch = 0
+        for num_epochs in range(min_epoch, max_epoch, 10):
+            model = train_model(model, early_stopping, X_train, y_train, num_epochs, initial_epoch)
+            initial_epoch = num_epochs
 
-        # Make predictions
-        predictions = model.predict(X_test)
+            # Make predictions
+            predictions = model.predict(X_test)
 
-        # Inverse transform the predictions and actual values
-        predictions_original = voltage_scaler.inverse_transform(predictions.reshape(-1, 1)).reshape(predictions.shape)
-        y_test_original = voltage_scaler.inverse_transform(y_test.reshape(-1, 1)).reshape(y_test.shape)
+            # Inverse transform the predictions and actual values
+            predictions_original = voltage_scaler.inverse_transform(predictions.reshape(-1, 1)).reshape(predictions.shape)
+            y_test_original = voltage_scaler.inverse_transform(y_test.reshape(-1, 1)).reshape(y_test.shape)
 
-        # After making predictions and inverse transforming
-        y_test_flat = y_test_original.flatten()
-        predictions_flat = predictions_original.flatten()
+            # After making predictions and inverse transforming
+            y_test_flat = y_test_original.flatten()
+            predictions_flat = predictions_original.flatten()
 
-        # # Create a time-like x-axis (assuming each point represents a fixed time step)
-        # time_steps = np.arange(len(y_test_flat))
+            # # Create a time-like x-axis (assuming each point represents a fixed time step)
+            # time_steps = np.arange(len(y_test_flat))
 
-        # Plot the results
-        fig, ax = plt.subplots()
-        ax.plot(original_time[::2], original_volt[::2], label="Original Data", color='lightgray', alpha=0.5)
-        ax.plot(timestamps_test.flatten()[10:], y_test_original.flatten()[10:], label = "Actual")
-        ax.plot(timestamps_test.flatten()[10:], predictions_original.flatten()[10:], label = "Preds")
+            # Plot the results
+            fig, ax = plt.subplots()
+            ax.plot(original_time[::2], original_volt[::2], label="Original Data", color='lightgray', alpha=0.5)
+            ax.plot(timestamps_test.flatten()[10:], y_test_original.flatten()[10:], label = "Actual")
+            ax.plot(timestamps_test.flatten()[10:], predictions_original.flatten()[10:], label = "Preds")
 
-        ax.set_xlabel("Timestamp")
-        ax.set_ylabel("Voltage")
-        ax.set_title('LSTM Model: Actual vs Predicted Voltage for Next Day')
-        ax.legend()
-        plt.xticks(rotation=45)
-        plt.tight_layout()
+            ax.set_xlabel("Timestamp")
+            ax.set_ylabel("Voltage")
+            ax.set_title('LSTM Model: Actual vs Predicted Voltage for Next Day')
+            ax.legend()
+            plt.xticks(rotation=45)
+            plt.tight_layout()
 
-        figures[num_epochs] = fig
+            figures[num_epochs+learning_rate] = fig
 
     return figures
 
