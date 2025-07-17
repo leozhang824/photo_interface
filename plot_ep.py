@@ -66,6 +66,7 @@ def plot(df, start_time):
 
 
     # Show the interactive plot
+    print("returning plot")
     return fig
 
 

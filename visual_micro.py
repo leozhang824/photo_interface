@@ -108,6 +108,7 @@ if csv_file is not None:
 
     # # ver 1
   if st.button("Generate more interactive plot"):
+    print("making plot")
     fig = plot(data, start_datetime)
     fig.show()
 
