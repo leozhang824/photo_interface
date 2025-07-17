@@ -45,7 +45,7 @@ if csv_file is not None:
   #     del st.session_state["uploaded"]
   if "uploaded" not in st.session_state or st.session_state["uploaded"] != csv_file.name:
     min_epoch = 20
-    max_epoch = 60
+    max_epoch = 110
 
     for num_epochs in range(min_epoch, max_epoch, 10):
       if num_epochs in st.session_state:
@@ -66,7 +66,7 @@ if csv_file is not None:
 
 col1, col2 = st.columns(2)
 with col1: 
-  num_epochs = st.slider(label="Select the number of epochs (how many times the model will run)", min_value=20, max_value=50, value=50, step=10)
+  num_epochs = st.slider(label="Select the number of epochs (how many times the model will run)", min_value=20, max_value=100, value=50, step=10)
 
 if (num_epochs) not in st.session_state:
   st.write("Not ready yet")
