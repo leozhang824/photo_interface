@@ -61,7 +61,7 @@ start_datetime = datetime.datetime.combine(start_date, start_time)
 filter_datetime = datetime.datetime.combine(filter_date, filter_time) 
 
 if st.button("Rerun"):
-    if "uploaded" not in st.session_state:
+    if "uploaded" in st.session_state:
       del st.session_state["uploaded"]
     if csv_file is not None:
       output(csv_file)
