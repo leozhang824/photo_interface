@@ -128,7 +128,7 @@ def create_model(sequence_length, num_features):
         TimeDistributed(Dense(1))
     ])
     
-    model.compile(optimizer=Adam(learning_rate=0.005), loss='mae')
+    model.compile(optimizer=Adam(learning_rate=0.003), loss='mae')
     early_stopping = EarlyStopping(
         monitor='val_loss',
         patience=10,
@@ -162,6 +162,7 @@ def make_pred_plot(start_datetime, filter_datetime, csv, min_epoch, max_epoch):
 
     # Prepare sequences for LSTM
     X, y, timestamps = prepare_sequences(data, sequence_length, feature_columns)
+    
 
     # Get the correct number of features
     num_features = X.shape[2]
@@ -171,6 +172,10 @@ def make_pred_plot(start_datetime, filter_datetime, csv, min_epoch, max_epoch):
     X_train, X_test = X[:split], X[split:]
     y_train, y_test = y[:split], y[split:]
     timestamps_train, timestamps_test = timestamps[:split], timestamps[split:]
+
+    print(type(X_train), X_train.shape)
+    print(type(y_train), y_train.shape)
+
 
     print(f"X: {len(X)}")
 
