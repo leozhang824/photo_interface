@@ -21,7 +21,7 @@ def load_and_preprocess_data(start_datetime, filter_datetime, data):
 
     
     # Identify feature columns (excluding 'Time (seconds)' and 'day')
-    feature_columns = [col for col in data.columns if col not in ['Time (seconds)', 'day', 'voltage']]
+    feature_columns = [col for col in data.columns if col not in ['Time (seconds)', 'day', 'voltage', 'time']]
     print("Feature columns:", feature_columns) 
 
     original_time = data['Time (seconds)']
