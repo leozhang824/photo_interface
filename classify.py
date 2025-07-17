@@ -8,3 +8,5 @@ from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 # 4 - Not Sure
 # 5 - Lack of Data
 # 6 - DAQ Unplugged
+
+# classify: use predict but move the voltage into features and make y an np array of types

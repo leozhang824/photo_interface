@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import datetime
+import plotly.graph_objects as go
 from plot_ep import plot
 
 st.set_page_config(
