@@ -19,16 +19,18 @@ def output(csv_file):
         st.session_state[num_epochs+learning_rate] = {}
     
   csv = pd.read_csv(csv_file)
-
-  st.session_state["uploaded"] = csv
   
   st.write("CSV File Name:", csv_file.name)
 
-  figures = make_pred_plot(start_datetime, filter_datetime, st.session_state["uploaded"], min_epoch, max_epoch, min_lr, max_lr)
+  st.session_state["file"] = csv
+
+  figures = make_pred_plot(start_datetime, filter_datetime, st.session_state["file"], min_epoch, max_epoch, min_lr, max_lr)
   
   for num_epochs in range(min_epoch, max_epoch, 10):
     for learning_rate in np.arange(min_lr, max_lr, 0.001):
       st.session_state[num_epochs+learning_rate] = figures[num_epochs+learning_rate]
+
+  st.session_state["uploaded"] = csv_file.name
 
 st.set_page_config(
     page_title="Prediction Model",
