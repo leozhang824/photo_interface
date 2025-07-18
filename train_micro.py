@@ -52,9 +52,6 @@ def prepare_sequences(data, sequence_length, feature_columns):
     targets = []
     timestamps = []
 
-    xs_sequences = []
-    xs_targets = []
-    xs_timestamps = []
     voltage_column = 'voltage'
 
     # Ensure 'day' column is datetime
@@ -84,7 +81,7 @@ def prepare_sequences(data, sequence_length, feature_columns):
             targets.append(next_day_voltage)
             timestamps.append(next_day_timestamp)
         else:
-            print(f"Incomplete sequence at window starting {window_start}")
+            print(f"Data lengths are messed up. Curr Day: {len(current_day_data)}, Next Day: {len(next_day_voltage)}")
 
         # Move window forward by 1 day (or change to sliding window)
         current_time += pd.Timedelta(seconds=86400)

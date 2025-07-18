@@ -12,22 +12,23 @@ def output(csv_file):
   min_lr = 0.001
   max_lr = 0.004
 
+
   for num_epochs in range(min_epoch, max_epoch, 10):
     for learning_rate in np.arange(min_lr, max_lr, 0.001):
       if num_epochs+learning_rate in st.session_state:
-        del st.session_state[num_epochs+learning_rate]
+        st.session_state[num_epochs+learning_rate] = {}
     
   csv = pd.read_csv(csv_file)
+
+  st.session_state["uploaded"] = csv
   
   st.write("CSV File Name:", csv_file.name)
 
-  figures = make_pred_plot(start_datetime, filter_datetime, csv, min_epoch, max_epoch, min_lr, max_lr)
+  figures = make_pred_plot(start_datetime, filter_datetime, st.session_state["uploaded"], min_epoch, max_epoch, min_lr, max_lr)
   
   for num_epochs in range(min_epoch, max_epoch, 10):
     for learning_rate in np.arange(min_lr, max_lr, 0.001):
       st.session_state[num_epochs+learning_rate] = figures[num_epochs+learning_rate]
-
-  st.session_state["uploaded"] = csv_file.name
 
 st.set_page_config(
     page_title="Prediction Model",
@@ -62,7 +63,7 @@ filter_datetime = datetime.datetime.combine(filter_date, filter_time)
 
 if st.button("Rerun"):
     if "uploaded" in st.session_state:
-      del st.session_state["uploaded"]
+      st.session_state["uploaded"] = {}
     if csv_file is not None:
       output(csv_file)
 

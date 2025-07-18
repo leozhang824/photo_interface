@@ -84,6 +84,8 @@ if csv_file is not None:
       in_high = False
       sub_start_time = None
 
+      ax.axvspan(filtered_data['Timestamp'].iloc[0], filtered_data['Timestamp'].iloc[-1], color='grey', alpha=0.3)
+
       for j in range(len(filtered_data)):
           if lux_above.iloc[j] and not in_high:
               in_high = True
