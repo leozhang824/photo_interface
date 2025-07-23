@@ -1,3 +1,4 @@
+import streamlit as st
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
@@ -210,15 +211,15 @@ def make_pred_plot(start_datetime, filter_datetime, csv, min_epoch, max_epoch, m
 
     for learning_rate in np.arange(min_lr, max_lr, 0.001):
     # Create and train the model
-        model, early_stopping = create_model(sequence_length, num_features, learning_rate)
+        st.session_state["model"], early_stopping = create_model(sequence_length, num_features, learning_rate)
 
         initial_epoch = 0
         for num_epochs in range(min_epoch, max_epoch, 10):
-            model = train_model(model, early_stopping, X_train, y_train, num_epochs, initial_epoch)
+            st.session_state["model"] = train_model(st.session_state["model"], early_stopping, X_train, y_train, num_epochs, initial_epoch)
             initial_epoch = num_epochs
 
             # Make predictions
-            predictions = model.predict(X_test)
+            predictions = st.session_state["model"].predict(X_test)
 
             # Inverse transform the predictions and actual values
             predictions_original = voltage_scaler.inverse_transform(predictions.reshape(-1, 1)).reshape(predictions.shape)
