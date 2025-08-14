@@ -78,7 +78,7 @@ if csv_file is not None:
 
       # ax.axvspan(start_time, end_time, color='grey', alpha=0.5)
 
-      lux_threshold = 0
+      lux_threshold = 3
       lux_above = filtered_data['light'] > lux_threshold 
 
       in_high = False
