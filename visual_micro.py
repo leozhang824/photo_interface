@@ -19,7 +19,7 @@ if csv_file is not None:
   # Read and ajdust csv_data
   data = pd.read_csv(csv_file)
   st.write("CSV File Name:", csv_file.name)
-
+  data = data[2:len(data)-1]
   # data['Timestamp'] = pd.to_datetime(data['Timestamp'])
   data.rename(columns={'Dev1 Channel3': 'Voltage'}, inplace=True)
 
