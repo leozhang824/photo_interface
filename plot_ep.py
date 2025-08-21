@@ -52,13 +52,13 @@ def plot(df, start_time):
         add_shading(
             fig,
             current_date + timedelta(hours=8),
-            current_date + timedelta(hours=17),
+            current_date + timedelta(hours=20),
             "yellow"
         )
         # 5 PM to 8 AM next day (gray)
         add_shading(
             fig,
-            current_date + timedelta(hours=17),
+            current_date + timedelta(hours=20),
             current_date + timedelta(days=1, hours=8),
             "gray"
         )
